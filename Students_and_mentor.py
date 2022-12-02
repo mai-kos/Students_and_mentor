@@ -1,3 +1,5 @@
+import gc
+
 class Student:
     def __init__(self, name, surname, gender):
         self.name = name
@@ -34,8 +36,8 @@ class Student:
     def __str__(self):
         res = f'Имя: {self.name}\nФамилия: {self.surname}\
         \nСредняя оценка за домашние задания: {self._get_average_hw_grade():.2f}\
-        \nКурсы в процессе изучения: {*self.courses_in_progress,}\
-        \nЗавершенные курсы: {*self.finished_courses, }'
+        \nКурсы в процессе изучения: {", ".join(self.courses_in_progress)}\
+        \nЗавершенные курсы: {", ".join(self.finished_courses)}'
         return res 
 
     def __lt__(self, dif_student):
@@ -96,8 +98,48 @@ class Reviewer(Mentor):
             return 'Ошибка'
 
     def __str__(self):
-        res = f'Имя: {self.name}\n Фамилия: {self.surname}'
+        res = f'Имя: {self.name}\nФамилия: {self.surname}'
         return res     
+
+def get_all_instances(of_class):
+    _instances = []
+    for obj in gc.get_objects():
+        if isinstance(obj, of_class):
+            _instances.append(obj)
+    return _instances
+
+# Я не стал посылать в функцию два аргумента, как сказано в задании.
+# Мне показалось, что не логично посылать список студентов вручную.
+# Если по заданию нам надо среднюю оценку ВСЕХ студентов курса,
+# то мы можем пробежаться по всем объектам класса Student. 
+
+def get_average_grade_for_all_students(course):
+    total_grades = 0
+    total_students = 0
+    for instance in get_all_instances(Student):
+        if course in instance.courses_in_progress\
+        and course in instance.grades:
+            total_grades += sum(instance.grades.get(course))
+            total_students += 1
+    if total_grades == 0:
+        return 'Оценок нет'
+    return total_grades / total_students
+
+# Здесь такая же логика. Пробегаемся по всем объектам класса Lecturer.
+
+def get_average_grade_for_all_lecturers(course):
+    total_grades = 0
+    total_lecturers = 0
+    for instance in get_all_instances(Lecturer):
+        if course in instance.courses_attached\
+        and course in instance.grades:
+            total_grades = sum(instance.grades.get(course))
+            total_lecturers += 1
+    if total_grades == 0:
+        return 'Оценок нет'
+    return total_grades / total_lecturers
+
+# Создаем по 2 объекта каждого класса.
 
 michael = Student('Michael', 'Scott', 'male')
 jim = Student('Jim', 'Halpert', 'male')
@@ -106,11 +148,15 @@ toby = Lecturer('Toby', 'Flanderson')
 stanley = Reviewer('Stanley', 'Hudson')
 andy = Reviewer('Andrew', 'Bernard')
 
+# Тестируем методы и наполняем списки и словари
+
 michael.courses_in_progress += ['Python', 'Java Script', 'Docker']
-jim.courses_in_progress += ['Python', 'Data Security', 'C++']
+jim.courses_in_progress += ['Python', 'Data Security', 'C++', 'Docker']
 michael.finished_courses += ['C#', 'HTML']
+michael.add_courses('CSS')
+jim.add_courses('React')
 jim.finished_courses += ['CSS', 'HTML']
-pam.courses_attached += ['Python', 'Docker']
+pam.courses_attached += ['Python', 'Docker', 'Data Security']
 toby.courses_attached += ['Python', 'Data Security', 'C++', 'Java Script']
 stanley.courses_attached += ['Python', 'Data Security', 'C++']
 andy.courses_attached += ['Python', 'Docker', 'Java Script']
@@ -121,8 +167,11 @@ andy.rate_hw(michael, 'Java Script', 6)
 andy.rate_hw(jim, 'Python', 6)
 michael.rate_lecturer(pam, 'Python', 9)
 michael.rate_lecturer(toby, 'Java Script', 3)
-jim.rate_lecturer(pam, 'Python', 10)
+michael.rate_lecturer(pam, 'Docker', 7)
+jim.rate_lecturer(toby, 'Python', 10)
 jim.rate_lecturer(toby, 'C++', 7)
+jim.rate_lecturer(pam, 'Data Security', 8)
+jim.rate_lecturer(pam, 'Docker', 8)
 
 print(michael)
 print()
@@ -131,3 +180,32 @@ print()
 print(pam)
 print()
 print(toby)
+print()
+print(stanley)
+print()
+print(andy)
+print()
+print(michael < jim)
+print(pam < toby)
+print()
+
+# Вот тут дальше у меня будет загвоздка и я не могу найти причину.
+
+# Средняя оценка всех студентов по конкретному курсу выводится правильно.
+
+print(get_average_grade_for_all_students('Python'))
+print(get_average_grade_for_all_students('Java Script'))
+
+# но если написать - print(get_average_grade_for_all_students('C++'))
+# то выдается ошибка "TypeError: 'NoneType' object is not iterable"
+# что очень странно, потому что C++ есть 
+print(get_average_grade_for_all_students('C++'))
+# Средняя оценка всех лекторов тоже выводится правильно
+print(pam.grades)
+print(pam.courses_attached)
+print(toby.grades)
+print(toby.courses_attached)
+print(get_average_grade_for_all_lecturers('Docker'))
+print(get_average_grade_for_all_lecturers('C++'))
+print(get_average_grade_for_all_lecturers('Python'))
+print(get_average_grade_for_all_lecturers('Data Security'))
