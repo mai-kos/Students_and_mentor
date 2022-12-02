@@ -27,6 +27,14 @@ class Student:
         res = f'Имя: {self.name}\n Фамилия: {self.surname}\n Средняя оценка за домашние задания: {self._get_average_hw_grade():.2f}\
         \n Курсы в процессе изучения: {*self.courses_in_progress,}\n Завершенные курсы: {*self.finished_courses,}'
         return res 
+
+    def __lt__(self, dif_student):
+        value1 = self._get_average_hw_grade()
+        value2 = dif_student._get_average_hw_grade()
+        if value1 < value2:
+            return True
+        else:
+            return False
      
 class Mentor:
     def __init__(self, name, surname):
@@ -47,6 +55,13 @@ class Lecturer(Mentor):
         res = f'Имя: {self.name}\n Фамилия: {self.surname}\n Средняя оценка за лекции: {self._get_average_lecture_grade():.2f}'
         return res
 
+    def __lt__(self, dif_lecturer):
+        value1 = self._get_average_lecture_grade()
+        value2 = dif_lecturer._get_average_lecture_grade()
+        if value1 < value2:
+            return True
+        else:
+            return False
 
 class Reviewer(Mentor):
     def __init__(self, name, surname):
